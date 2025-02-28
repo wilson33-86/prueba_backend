@@ -21,8 +21,7 @@ public class ComercianteController {
 	 @Autowired
 	    private IComercianteService comercianteService;
 
-	 @GetMapping("/municipios")
-	    @PreAuthorize("hasRole('Administrador') or hasRole('Auxiliar')")
+	 @GetMapping("/municipios")	  
 	    public ResponseEntity<ComercianteMunicipiosResponseRest> getMunicipios() {
 		    ResponseEntity<ComercianteMunicipiosResponseRest> municipios = comercianteService.getMunicipios();
 	        return municipios;

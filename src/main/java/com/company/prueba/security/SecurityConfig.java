@@ -1,32 +1,41 @@
 package com.company.prueba.security;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 public class SecurityConfig {
+	
+	private final JwtAuthorizationFilter jwtAuthorizationFilter;
+    private  final AuthenticationProvider authenticationProvider;
+    
+	public SecurityConfig(JwtAuthorizationFilter jwtAuthorizationFilter,
+			AuthenticationProvider authenticationProvider) {
+		super();
+		this.jwtAuthorizationFilter = jwtAuthorizationFilter;
+		this.authenticationProvider = authenticationProvider;
+	}
 
-    private final JwtService jwtService;  // Asegúrate de inyectar tu servicio JWT
+	
 
-    public SecurityConfig(JwtService jwtService) {
-        this.jwtService = jwtService;
-    }
-
-    @SuppressWarnings("removal")
 	@Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        // Configuración de la seguridad web
+        
         http.csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(requests -> requests
-                        .requestMatchers("/api/auth/login").permitAll()  // Permitir acceso a login
-                        .requestMatchers("/api/admin/**").hasRole("Administrador")  // Acceso solo para ADMIN
-                        .requestMatchers("/api/auxiliar/**").hasRole("Auxiliar")  // Acceso solo para AUXILIAR
-                        .requestMatchers("/api/comerciantes/municipios").authenticated()
-                        .anyRequest().authenticated()  // Cualquier otra solicitud requiere autenticación
-                        .and()
-                        .addFilterBefore(new JwtAuthorizationFilter(jwtService), UsernamePasswordAuthenticationFilter.class));  // Añadir el filtro JWT
+                        .requestMatchers("/api/auth/login").permitAll() 
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")  
+                        .requestMatchers("/api/auxiliar/**").hasRole("AUXILIAR")  
+                        .requestMatchers("/api/comerciantes/municipios").hasRole("ADMIN")    
+                        .anyRequest().authenticated())
+                .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authenticationProvider(authenticationProvider)
+                .addFilterBefore(jwtAuthorizationFilter, UsernamePasswordAuthenticationFilter.class);
+                        
 
         return http.build();
     }

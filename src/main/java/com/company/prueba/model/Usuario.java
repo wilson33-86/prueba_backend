@@ -1,5 +1,12 @@
 package com.company.prueba.model;
 
+import java.util.Collection;
+import java.util.List;
+
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -10,7 +17,7 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "USUARIO")
-public class Usuario {
+public class Usuario implements UserDetails {
 	    @Id
 	    @Column(name="USU_ID")
 	    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_usuario_id")
@@ -58,6 +65,21 @@ public class Usuario {
 		}
 		public void setUsuRol(String usuRol) {
 			this.usuRol = usuRol;
+		}
+		@Override
+		public Collection<? extends GrantedAuthority> getAuthorities() {
+			// TODO Auto-generated method stub
+			return List.of(new SimpleGrantedAuthority(usuRol));
+		}
+		@Override
+		public String getPassword() {
+			// TODO Auto-generated method stub
+			return usuPassword;
+		}
+		@Override
+		public String getUsername() {
+			// TODO Auto-generated method stub
+			return usuNombre;
 		}
 	    
 	    

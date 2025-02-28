@@ -1,38 +1,64 @@
 package com.company.prueba.security;
 import org.springframework.stereotype.Service;
 
-
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 
 import java.security.Key;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.crypto.spec.SecretKeySpec;
 
 
 @Service
 public class JwtService {
 
-	 private static final String SECRET_KEY = "pruebaSpring999999999999999999tttttttttttttttttttttttteeeee0000000000000000wlllllllllllllllllwkkkkkkkkkkkkkk";
-
-    @Value("${spring.security.jwt.expiration}")
-    private long expirationTime;
+	private static final String SECRET_KEY = "4qhjdj8ENBjdkYEjkcmz2kdl9jhej8kiGTAHud";    
+ 
+    private static final Long EXPIRATION_TIME = 3600000L;
 
     // Generar el token JWT
-    @SuppressWarnings("deprecation")
+   
 	public String generateToken(String email, String role) {
-    	 Key key = new SecretKeySpec(SECRET_KEY.getBytes(), SignatureAlgorithm.HS256.getJcaName());
+    	 
+    	 Map<String, Object> extra = new HashMap<>();
+    	 extra.put("role", role);
+    	 
         return Jwts.builder()
-        		   .setSubject(email)
-                   .claim("role", role)
-                   .setIssuedAt(new Date())
-                   .setExpiration(new Date(System.currentTimeMillis() + 3600000))  // Expiración en 1 hora
-                   .signWith(key, SignatureAlgorithm.HS256)
+        		   .subject(email)
+        		   .expiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))  // Expiración en 1 hora
+        		   .claims(extra)                 
+                   .signWith(Keys.hmacShaKeyFor(SECRET_KEY.getBytes()))
                    .compact();
     }
+	
+	@SuppressWarnings("deprecation")
+	public static UsernamePasswordAuthenticationToken getAuthentication(String token) {
+		try {
+			Claims claims = Jwts.parser()
+				      .setSigningKey(SECRET_KEY.getBytes())
+				      .build()
+				      .parseClaimsJws(token)
+				      .getBody();
+		
+				    String email = claims.getSubject();
+				    
+				    return new UsernamePasswordAuthenticationToken(email,null,Collections.emptyList());
+		}catch(JwtException e){
+			return null;
+		}
+				  
+	}
 
     // Extraer el rol del token JWT
     @SuppressWarnings("deprecation")
